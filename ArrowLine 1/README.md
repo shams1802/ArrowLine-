@@ -124,8 +124,8 @@ CameraHolder
 
 * **Unity 2020.3 LTS** or newer
 * **Visual Studio** or **VS Code** for script editing
-* **Mixamo Erica Archer** FBX model (39 animations) - or use provided folder
-* **Free Medieval Weapons** asset pack (Unity Asset Store or provided)
+* **Mixamo Erica Archer** FBX model (39 animations)
+* **Free Medieval Weapons** asset pack (Unity Asset Store)
 * **Basic C# knowledge** and Humanoid rig familiarity
 * **Audio files**: WAV or MP3 format for footsteps, bow, and impact sounds
 
