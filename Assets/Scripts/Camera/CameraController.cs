@@ -82,7 +82,7 @@ public class CameraController : MonoBehaviour
         else
         {
             FindPlayer();
-        }
+        }         
     }
 
     void FindPlayer()
@@ -132,7 +132,7 @@ public class CameraController : MonoBehaviour
         if (!Application.isPlaying)
             return;
 
-        if (Physics.Linecast(target.transform.position + target.transform.up, cameraSettings.camPosition.position, out hit, cameraSettings.camCollisionLayers))
+        if(Physics.Linecast(target.transform.position + target.transform.up, cameraSettings.camPosition.position, out hit, cameraSettings.camCollisionLayers))
         {
             Vector3 newCamPos = new Vector3(hit.point.x + hit.normal.x * .2f, hit.point.y + hit.normal.y * .8f, hit.point.z + hit.normal.z * .2f);
             mainCam.transform.position = Vector3.Lerp(mainCam.transform.position, newCamPos, Time.deltaTime * cameraSettings.moveSpeed);

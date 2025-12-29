@@ -36,8 +36,8 @@ public class InputSystem : MonoBehaviour
     [Header("Head Rotation Settings")]
     public float lookAtPoint = 2.8f;
 
-    //[Header("Gravity Settings")]
-    //public float gravityValue = 1.2f;
+    [Header("Gravity Settings")]
+    public float gravityValue = 1.2f;
 
     Transform camCenter;
     Transform mainCam;
@@ -49,8 +49,8 @@ public class InputSystem : MonoBehaviour
 
     bool hitDetected;
 
-    // Animator playerAnim;
-    //CharacterController cc;
+    Animator playerAnim;
+    CharacterController cc;
 
     // Start is called before the first frame update
     void Start()
@@ -58,8 +58,8 @@ public class InputSystem : MonoBehaviour
         moveScript = GetComponent<Movement>();
         camCenter = Camera.main.transform.parent;
         mainCam = Camera.main.transform;
-        // playerAnim = GetComponent<Animator>();
-        // cc = GetComponent<CharacterController>();
+        playerAnim = GetComponent<Animator>();
+        cc = GetComponent<CharacterController>();
     }
 
     // Update is called once per frame
@@ -68,18 +68,18 @@ public class InputSystem : MonoBehaviour
         if (Input.GetAxis(input.forwardInput) != 0 || Input.GetAxis(input.strafeInput) != 0)
             RotateToCamView();
 
-        //    if (!cc.isGrounded)
-        //    {
-        //        cc.Move(new Vector3(transform.position.x, transform.position.y - gravityValue, transform.position.z));
-        //    }
+        if (!cc.isGrounded)
+        {
+            cc.Move(new Vector3(transform.position.x, transform.position.y - gravityValue, transform.position.z));
+        }
 
         isAiming = Input.GetButton(input.aim);
 
         if (testAim)
             isAiming = true;
 
-        //    if (bowScript.bowSettings.arrowCount < 1)
-        //        isAiming = false;
+        if (bowScript.bowSettings.arrowCount < 1)
+            isAiming = false;
 
         moveScript.AnimateCharacter(Input.GetAxis(input.forwardInput), Input.GetAxis(input.strafeInput));
         moveScript.SprintCharacter(Input.GetButton(input.sprintInput));
@@ -88,10 +88,10 @@ public class InputSystem : MonoBehaviour
         if (isAiming)
         {
             Aim();
-            //        bowScript.EquipBow();
+            bowScript.EquipBow();
 
-            //        if(bowScript.bowSettings.arrowCount > 0)
-            moveScript.CharacterPullString(Input.GetButton(input.fire));
+            if(bowScript.bowSettings.arrowCount > 0)
+                moveScript.CharacterPullString(Input.GetButton(input.fire));
 
             if (Input.GetButtonUp(input.fire))
             {
@@ -106,47 +106,47 @@ public class InputSystem : MonoBehaviour
                     bowScript.Fire(ray.GetPoint(300f));
                 }
             }
-
+                
         }
         else
         {
-            //bowScript.UnEquipBow();
+            bowScript.UnEquipBow();
             bowScript.RemoveCrosshair();
             DisableArrow();
             Release();
         }
+                
+    }
 
-     }
-
-    void LateUpdate()
+     void LateUpdate()
     {
         if (isAiming)
             RotateCharacterSpine();
     }
 
     void RotateToCamView()
-        {
-            Vector3 camCenterPos = camCenter.position;
+    {
+        Vector3 camCenterPos = camCenter.position;
 
-            Vector3 lookPoint = camCenterPos + (camCenter.forward * lookDIstance);
-            Vector3 direction = lookPoint - transform.position;
+        Vector3 lookPoint = camCenterPos + (camCenter.forward * lookDIstance);
+        Vector3 direction = lookPoint - transform.position;
 
-            Quaternion lookRotation = Quaternion.LookRotation(direction);
-            lookRotation.x = 0;
-            lookRotation.z = 0;
+        Quaternion lookRotation = Quaternion.LookRotation(direction);
+        lookRotation.x = 0;
+        lookRotation.z = 0;
 
-            Quaternion finalRotation = Quaternion.Lerp(transform.rotation, lookRotation, Time.deltaTime * lookSpeed);
-            transform.rotation = finalRotation;
-        }
+        Quaternion finalRotation = Quaternion.Lerp(transform.rotation, lookRotation, Time.deltaTime * lookSpeed);
+        transform.rotation = finalRotation;
+    }
 
-    ////Does the aiming and sends a raycast to a target
+    //Does the aiming and sends a raycast to a target
     void Aim()
     {
         Vector3 camPosition = mainCam.position;
         Vector3 dir = mainCam.forward;
 
         ray = new Ray(camPosition, dir);
-        if (Physics.Raycast(ray, out hit, 500f, aimLayers))
+        if(Physics.Raycast(ray, out hit, 500f, aimLayers))
         {
             hitDetected = true;
             Debug.DrawLine(ray.origin, hit.point, Color.green);
@@ -187,21 +187,21 @@ public class InputSystem : MonoBehaviour
         bowScript.ReleaseString();
     }
 
-    //public void PlayPullSound()
-    //{
-    //    bowScript.PullAudio();
-    //}
+    public void PlayPullSound()
+    {
+        bowScript.PullAudio();
+    }
 
-    //private void OnAnimatorIK(int layerIndex)
-    //{
-    //    if (isAiming)
-    //    {
-    //        playerAnim.SetLookAtWeight(1f);
-    //        playerAnim.SetLookAtPosition(ray.GetPoint(lookAtPoint));
-    //    }
-    //    else
-    //    {
-    //        playerAnim.SetLookAtWeight(0);
-    //    }
-    //}
+    private void OnAnimatorIK(int layerIndex)
+    {
+        if (isAiming)
+        {
+            playerAnim.SetLookAtWeight(1f);
+            playerAnim.SetLookAtPosition(ray.GetPoint(lookAtPoint));
+        }
+        else
+        {
+            playerAnim.SetLookAtWeight(0);
+        }
+    }
 }

@@ -27,10 +27,10 @@ public class Bow : MonoBehaviour
         public Transform stringHandPullPos;
         public Transform stringInitialParent;
 
-        //[Header("Bow Audio Settings")]
-        //public AudioClip pullStringAudio;
-        //public AudioClip releaseStringAudio;
-        //public AudioClip drawArrowAudio;
+        [Header("Bow Audio Settings")]
+        public AudioClip pullStringAudio;
+        public AudioClip releaseStringAudio;
+        public AudioClip drawArrowAudio;
     }
     [SerializeField]
     public BowSettings bowSettings;
@@ -41,15 +41,15 @@ public class Bow : MonoBehaviour
 
     Rigidbody currentArrow;
 
-    bool canPullString = false;
-    bool canFireArrow = false;
+    //bool canPullString = false;
+    //bool canFireArrow = false;
 
-    // AudioSource bowAudio;
+    AudioSource bowAudio;
     
     // Start is called before the first frame update
     void Start()
     {
-        // bowAudio = GetComponent<AudioSource>();
+        bowAudio = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -60,7 +60,7 @@ public class Bow : MonoBehaviour
 
     public void PickArrow()
     {
-        // bowAudio.PlayOneShot(bowSettings.drawArrowAudio);
+        bowAudio.PlayOneShot(bowSettings.drawArrowAudio);
         bowSettings.arrowPos.gameObject.SetActive(true);
     }
 
@@ -110,24 +110,22 @@ public class Bow : MonoBehaviour
             Destroy(currentCrossHair);
     }
 
-    //public void PullAudio()
-    //{
-    //    bowAudio.PlayOneShot(bowSettings.pullStringAudio);
-    //}
+    public void PullAudio()
+    {
+        bowAudio.PlayOneShot(bowSettings.pullStringAudio);
+    }
 
     public void Fire(Vector3 hitPoint)
     {
-        //if (bowSettings.arrowCount < 1)
-        //    return;
+        if (bowSettings.arrowCount < 1)
+            return;
 
-        //bowAudio.PlayOneShot(bowSettings.releaseStringAudio);
-        Vector3 rawdir = hitPoint - bowSettings.arrowPos.position;
-        Vector3 dir = rawdir.normalized * 300;
-
+        bowAudio.PlayOneShot(bowSettings.releaseStringAudio);
+        Vector3 dir = hitPoint - bowSettings.arrowPos.position;
         currentArrow = Instantiate(bowSettings.arrowPrefab, bowSettings.arrowPos.position, bowSettings.arrowPos.rotation) as Rigidbody;
 
         currentArrow.AddForce(dir * bowSettings.arrowForce, ForceMode.Force);
 
-        // bowSettings.arrowCount -= 1;
+        bowSettings.arrowCount -= 1;
     }
 }

@@ -15,9 +15,7 @@ A Unity project for a third-person bow and arrow combat system with realistic ai
   - [Phase 2: Character Movement and Camera Control](#phase-2-character-movement-and-camera-control)
   - [Phase 3: Combat Stance and Animation Rigging](#phase-3-combat-stance-and-animation-rigging)
   - [Phase 4: Advanced Aiming Mechanics](#phase-4-advanced-aiming-mechanics)
-  - [Phase 5: Advanced Aiming Mechanics](#phase-5-advanced-aiming-mechanics)
-  - [Phase 6: Equipment Management System](#phase-6-equipment-management-system)
-  - [Phase 7: Audio and Ammunition System](#phase-7-audio-and-ammunition-system)
+  - [Phase 5: Arrow Logic and Equipment Systems](#phase-5-arrow-logic-and-equipment-systems)
 - [Animation State Machine](#animation-state-machine)
 - [Physics Configuration](#physics-configuration)
 - [Best Practices](#best-practices)
@@ -27,23 +25,35 @@ A Unity project for a third-person bow and arrow combat system with realistic ai
 ---
 
 ## Overview
-Implements a third-person bow and arrow system with:
-- Character movement and camera control
-- Bow drawing, aiming, and arrow physics
-- Animation state management
-- Equipment and ammo handling
+Implements a complete third-person bow and arrow system featuring:
+- Humanoid character (Erica Archer) with movement and animation
+- 2D blend trees for walk/run/aim locomotion
+- Full bow mechanics: equip, draw, aim, and fire
+- Arrow physics with Rigidbody and collision detection
+- First-person camera with collision avoidance
+- Upper body IK for head/spine rotation during aim
+- Footstep and impact sound effects
+- Ammo system with counter management
 
 ---
 
 ## Features
-- Third-person movement (keyboard/controller)
-- Camera collision handling
-- Animator blend trees for walk/run
-- Modular scripts for easy extension
+- **Character System**: Erica Archer Humanoid rig with full skeleton hierarchy
+- **Movement**: Walk/Run blend tree with directional locomotion (forward/back/left/right)
+- **Camera**: Third-person with collision detection, zoom on aim, dual-layer rendering (main + UI)
+- **Combat**: Bow equip/unequip animations with carry position on spine
+- **Aiming**: Spine-based aim with IK head tracking, crosshair UI, dynamic camera positioning
+- **Bow Mechanics**: String deformation with animation events, arrow ammo system
+- **Arrow Physics**: Rigidbody with continuous collision detection, Capsule collider
+- **Audio**: Footstep events, bow draw/release sounds, arrow impact effects
+- **Animation States**: Separate upper/lower body layers with sub-state machines for arrow logic
 
 ---
 
 ## Project Structure
+
+### Provided Resource
+
 ```plaintext
 Assets
 ├── Assets
@@ -60,6 +70,7 @@ Assets
 │       ├── Textures
 │       └── (erika_archer.fbx and 39 other fbx)
 ├── Prefabs
+│   ├── Arrow
 │   └── CrossHair
 ├── Scripts
 │   ├── Camera
@@ -70,9 +81,15 @@ Assets
 │   └── Weapon	
 │       ├── Arrow.cs
 │       └── Bow.cs
+├── Sounds
+│   ├── Bow & Arrow
+│   ├── Footsteps
+│   └── Impact Sfx
 └── UI
     └── arrow-crosshair 1
 ```
+
+### Hierarchy
 
 ```plaintext
 ENV
@@ -90,101 +107,12 @@ Player
     │   ├── Erika_Archer_Eyelashes_Mesh
     │   └── Erika_Archer_Eyes_Mesh
     │
-    └── Hips
-        ├── LeftUpLeg
-        │   └── LeftLeg
-        │       └── LeftFoot
-        │           └── LeftToeBase
-        │               └── LeftToe_End
-        │
-        ├── RightUpLeg (Same as LeftUpLeg)
-        │
-        └── Spine
-            └── Spine1
-                └── Spine2
-                    ├── LeftShoulder
-                    │   └── LeftArm
-                    │       └── LeftForeArm
-                    │           └── LeftHand
-                    │               ├── Wooden Bow
-                    │               │   ├── Wooden Bow_1
-                    │               │   │   └── WB.main
-                    │               │   │       │
-                    │               │   │       ├── WB.down.bone
-                    │               │   │       │   └── WB.down.bone.001
-                    │               │   │       │       └── WB.down.bone.002
-                    │               │   │       │           └── WB.down.bone.003
-                    │               │   │       │               └── WB.down.bone.004
-                    │               │   │       │                   └── WB.down.bone.005
-                    │               │   │       │                       └── WB.down.bone.005_end
-                    │               │   │       │
-                    │               │   │       ├── WB.down.horn
-                    │               │   │       │   └── WB.down.horn_end
-                    │               │   │       │
-                    │               │   │       ├── WB.down.shoulder
-                    │               │   │       │   └── WB.down.ik
-                    │               │   │       │       └── WB.down.ik_end
-                    │               │   │       │
-                    │               │   │       ├── WB.string
-                    │               │   │       │   └── WB.string_end
-                    │               │   │       │
-                    │               │   │       ├── WB.top.bone
-                    │               │   │       │   └── WB.top.bone.001
-                    │               │   │       │       └── WB.top.bone.002
-                    │               │   │       │           └── WB.top.bone.003
-                    │               │   │       │               └── WB.top.bone.004
-                    │               │   │       │                   └── WB.top.bone.005
-                    │               │   │       │                       └── WB.top.bone.005_end
-                    │               │   │       │
-                    │               │   │       ├── WB.top.horn
-                    │               │   │       │   └── WB.top.horn_end
-                    │               │   │       │
-                    │               │   │       ├── WB.top.shoulder
-                    │               │   │       │   └── WB.top.ik
-                    │               │   │       │       └── WB.top.ik_end
-                    │               │   │       │
-                    │               │   │       └── StringInitialPos
-                    │               │   │
-                    │               │   └── wooden bow_1
-                    │               │
-                    │               ├── LeftHandIndex1
-                    │               │   └── LeftHandIndex2
-                    │               │       └── LeftHandIndex3
-                    │               │           └── LeftHandIndex4
-                    │               ├── LeftHandMiddle (1-4)
-                    │               ├── LeftHandRing (1-4)
-                    │               ├── LeftHandPinky (1-4)
-                    │               └── LeftHandThumb (1-4)
-                    │
-                    ├── Neck
-                    │   └── Head
-                    │       ├── HeadTop_End
-                    │       ├── LeftEye
-                    │       └── RightEye
-                    │
-                    └── RightShoulder (Same as LeftShoulder except for Wooden Bow)
+    └── Hips (Wooden Bow → Spine & Arrow -> RightHand)
 
 CameraHolder
 └── Center
     ├── Main Camera
     │   └── UICamera
-    └── CamPosition
-
-```
-
-
-```plaintext
-ENV
-├── Plane
-├── Cube1
-├── Cube2
-├── Cube3
-└── Cube4
-Player
-└── erika_archer
-CameraHolder
-└── Center
-    ├── Main Camera
     └── CamPosition
 ```
 
@@ -194,20 +122,25 @@ CameraHolder
 
 ## Prerequisites
 
-* Unity 2020.3 LTS or newer
-* Visual Studio / VS Code
-* Mixamo Erica Archer model & animations
-* Basic Unity & C# knowledge
+* **Unity 2020.3 LTS** or newer
+* **Visual Studio** or **VS Code** for script editing
+* **Mixamo Erica Archer** FBX model (39 animations) - or use provided folder
+* **Free Medieval Weapons** asset pack (Unity Asset Store or provided)
+* **Basic C# knowledge** and Humanoid rig familiarity
+* **Audio files**: WAV or MP3 format for footsteps, bow, and impact sounds
 
 ---
 
 ## Quick Start
 
-1. Import Erica Archer from Mixamo
-2. Configure humanoid rig and animations
-3. Set up Animator Controller
-4. Add movement & camera scripts
-5. Test locomotion and camera behavior
+1. **Import Assets**: Add Erica Archer (Humanoid, 39 animations) and Free Medieval Weapons to Assets
+2. **Setup Animator**: Create blend trees (Walk/Run/Aim Move) with parameters (forward, strafe, sprint, aim, pullString, fire)
+3. **Add Scripts**: Attach Movement.cs, InputSystem.cs, CameraController.cs, Bow.cs, Arrow.cs
+4. **Configure Bow**: Attach wooden bow to LeftHand, arrow to RightHand, setup string deformation
+5. **Test Movement**: Verify WASD locomotion, Shift sprint, Right-click aim zoom
+6. **Enable Audio**: Add footstep events to walk/run animations, bow/arrow sounds to animations
+7. **Adjust Ammo**: Set Arrow Count = 10, test fire and ammo decrement
+8. **Play & Iterate**: Test aim direction, camera collision, head rotation (IK), crosshair positioning
 
 ---
 
@@ -222,9 +155,12 @@ CameraHolder
 
 ### Step 1.1: Import Character Assets
 
-* Create a `3D universe` `Project` in `Unity Hub`
-* Download **Erica Archer** from [mixamo](https://www.mixamo.com/#/) or use the already provided `Longbow` folder
-* Create the following folder structure :
+* Create a 3D project in Unity Hub
+* Download **Erica Archer** from [Mixamo](https://www.mixamo.com/#/)
+* Under `Characters` tab, search `Erika Archer` then select the one without bow
+* Then under `Animations` tab, search for `Pro Longbow Pack`
+* Download and rename folder `Longbow`, it should have one archer and 39 animation 
+* Create folder structure:
 
 ```plaintext
 Assets
@@ -233,7 +169,7 @@ Assets
 │       ├── Animator
 │       ├── Materials
 │       ├── Textures
-│       └── (erika_archer.fbx and 39 other fbx)
+│       └── (erika_archer.fbx and 39 animation file)
 ├── Prefabs(to be added)
 ├── Scripts(to be added)
 └── UI(to be added)
@@ -256,13 +192,10 @@ Assets
     * A **Normal Map** popup will appear — click **Fix Now**
     * Click **Extract Materials** and select the folder `Assets/Assets/Longbow/Materials`
 
-* For **every animation FBX file** inside `Assets/Assets/Longbow`:
-
-  * Select all the animation file using shift key
-  * Go to **Rig Tab**
-  * Set **Animation Type** to `Humanoid`
-  * Set **Avatar Definition** to `Copy From Other Avatar`
-  * Choose `erika_archerAvatar` from the dropdown
+* For each animation FBX in `Assets/Assets/Longbow`:
+  * Shift-select all animation files
+  * Rig Tab → Set **Animation Type** to `Humanoid`
+  * Set **Avatar Definition** to `Copy From Other Avatar` → select `erika_archerAvatar`
   * Click **Apply**
 
 ---
@@ -324,25 +257,15 @@ Then in the Project window under `Assets/Assets/Longbow`, locate:
 * Select `standing idle 01`
 * In the Inspector, rename it from `mixamo.com` to `Idle`
 * Enable **Loop Time** and **Loop Pose**
-* Under **Root Transform Position (Y)**:
-
-  * Enable **Bake Into Pose**
-  * Set **Based Upon** to `Feet`
+* Root Transform Position (Y) → Enable **Bake Into Pose**, set **Based Upon** to `Feet`
 * Click **Apply**
 
 **Walk (Front/Back/Left/Right)**
 
-* Select each `standing walk` animation one by one
-* Rename from `mixamo.com` to `Walk Front`, `Walk Back`, `Walk Left`, `Walk Right`
+* Select each `standing walk` animation → rename to `Walk Front/Back/Left/Right`
 * Enable **Loop Time** and **Loop Pose**
-* Under **Root Transform Rotation**:
-
-  * Enable **Bake Into Pose**
-  * Set **Based Upon** to `Original`
-* Under **Root Transform Position (Y)**:
-
-  * Enable **Bake Into Pose**
-  * Set **Based Upon** to `Feet`
+* Root Transform Rotation → Enable **Bake Into Pose**, set to `Original`
+* Root Transform Position (Y) → Enable **Bake Into Pose**, set to `Feet`
 * Click **Apply**
 
 **Run (Front/Back/Left/Right)**
@@ -370,12 +293,9 @@ Select the **Parameters** tab, click `+`, and create:
 
 **Walk Blend Tree**
 
-* Double click `Walk`
-* Select the **Blend Tree**
-* In the Inspector:
+* Double click `Walk`, select the **Blend Tree** → Set **Blend Type** to `2D Simple Directional`
+* Set **Parameters** to `strafe` (X) and `forward` (Y)
 
-  * Set **Blend Type** to `2D Simple Directional`
-  * Set **Parameters** to `strafe` (X) and `forward` (Y)
 * Under **Motion**, click `+` → `Add Motion Field` five times
 * Go to `Assets/Assets/Longbow` folder and find `standing idle 01`, `standing walk (front/back/left/right)`, and `standing run (front/back/left/right)`
 * Click on small triangle there and assign:
@@ -431,16 +351,8 @@ Assets
 
 ### Step 2.2: Character Controller
 
-* Select `Player` in the Hierarchy
-* Drag and drop `Character.cs` onto it
-* A **Character Controller** component will be added automatically
-* Adjust:
-
-  * **Center**
-  * **Radius**
-  * **Height**
-
-  so the green capsule correctly surrounds the character model
+* Select `Player` → Drag `Character.cs` onto it (auto-adds Character Controller)
+* Adjust **Center**, **Radius**, **Height** so capsule surrounds character
 
 ---
 
@@ -481,11 +393,9 @@ Assets
 
 ### Step 2.4: Camera Hierarchy
 
-* Create an empty GameObject named `CameraHolder`
-* Reset its position to `(0,0,0)`
-* Right click `CameraHolder` → `Create Empty` → rename to `Center`
-* Position `Center` roughly at the hip level of the character
-* Drag `Main Camera` under `Center` and adjust position as desired
+* Create empty → `CameraHolder` → Reset position to (0,0,0)
+* Create empty under it → `Center` → Position at character's hip level
+* Drag `Main Camera` under `Center`
 
 ```plaintext
 ENV
@@ -551,13 +461,8 @@ CameraHolder
 
 ### Step 3.1: Import Weapon Assets
 
-* Add weapon assets **Free medieval weapons** into `Assets/Assets`
-* You can either:
-  * Download from Unity Asset Store:  
-    https://assetstore.unity.com/packages/3d/props/weapons/free-pack-of-medieval-weapons-136607  
-  * OR use the provided `Free medieval weapons` folder from this repository
-
-* After importing or copying, confirm your Project window folder structure looks **exactly** like this:
+* Add [**Free medieval weapons**](https://assetstore.unity.com/packages/3d/props/weapons/free-pack-of-medieval-weapons-136607) to `Assets/Assets`
+* Verify folder structure is correct
 
 ```plaintext
 Assets
@@ -783,18 +688,10 @@ Assets
 
 ### Step 4.2: World Space Crosshair
 
-* Select `Canvas`
-
-  * `Render Mode` → `World Space`
-  * `Rect Transform` → Pos X/Y/Z = `0`
-  * Set `Width = 10`, `Height = 1` (adjust if needed)
-  * Adjust scale if needed
-
-* Select `Image`, `Rect Transform` → `Stretch / Stretch` 
-
-* Select `Canvas`, adjust scale and position if needed
-
-⚠️ Dont change position and scale of `Image`
+* Select `Canvas` → `Render Mode` → `World Space` → Position (0,0,0)
+* Set **Width** = 10, **Height** = 1
+* Select `Image` → `Rect Transform` → `Stretch / Stretch`
+⚠️ Don't change Image position/scale
 
 ![Animator Parameters and Blend Trees Setup](./Images%20of%20Setting/PHASE%204,%20STEP%202.png)
 
@@ -941,422 +838,281 @@ Assets
 
 ---
 
-## Phase 5: //
+## Phase 5: Arrow Logic and Equipment Systems
+
 
 ---
 
-### Step 5.1: Implement Camera-Based Aiming
+### Step 5.1: Arrow Core Logic
 
-**Create AimController Script**
-1. Create new script: Assets/Scripts/Weapon/AimController.cs
-2. This script will handle aim direction calculation
+* Go to `Assets/Scripts/Weapon` and create script `Arrow.cs`
+  * Copy its content from
+    `Assets/Scripts/Weapon/Arrow/1 Arrow Logic`
 
-**Aim Direction Logic**
-```csharp
-using UnityEngine;
+* Replace scripts:
 
-public class AimController : MonoBehaviour
-{
-    [Header("Aim Settings")]
-    public Transform cameraTransform;
-    public LayerMask aimLayerMask;
-    public float maxAimDistance = 100f;
-    
-    [Header("References")]
-    public Transform characterBody;
-    public Transform bowTransform;
-    
-    private Vector3 currentAimPoint;
-    
-    void Update()
-    {
-        UpdateAimDirection();
-        RotateCharacterToAim();
-        RotateBowToAim();
-    }
-    
-    void UpdateAimDirection()
-    {
-        // Raycast from camera to determine aim point
-        Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
-        
-        if (Physics.Raycast(ray, out RaycastHit hit, maxAimDistance, aimLayerMask))
-        {
-            currentAimPoint = hit.point;
-        }
-        else
-        {
-            // If no hit, aim at max distance point
-            currentAimPoint = ray.GetPoint(maxAimDistance);
-        }
-    }
-    
-    void RotateCharacterToAim()
-    {
-        // Calculate direction from character to aim point (horizontal only)
-        Vector3 aimDirection = currentAimPoint - characterBody.position;
-        aimDirection.y = 0; // Keep character upright
-        
-        if (aimDirection.magnitude > 0.1f)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(aimDirection);
-            characterBody.rotation = Quaternion.Slerp(
-                characterBody.rotation, 
-                targetRotation, 
-                Time.deltaTime * 10f
-            );
-        }
-    }
-    
-    void RotateBowToAim()
-    {
-        // Rotate bow to point at aim location including vertical angle
-        Vector3 bowAimDirection = currentAimPoint - bowTransform.position;
-        
-        if (bowAimDirection.magnitude > 0.1f)
-        {
-            Quaternion bowRotation = Quaternion.LookRotation(bowAimDirection);
-            bowTransform.rotation = Quaternion.Slerp(
-                bowTransform.rotation,
-                bowRotation,
-                Time.deltaTime * 15f
-            );
-        }
-    }
-    
-    // Public method for other scripts to access aim point
-    public Vector3 GetAimPoint()
-    {
-        return currentAimPoint;
-    }
-}
-```
+  * `Bow.cs` → `Assets/Scripts/Weapon/Bow/3 Arrow Logic`
+  * `InputSystem.cs` → `Assets/Scripts/Character/InputSystem/7 Arrow Logic`
 
-#### Step 5.2: Configure Aiming System
+* Go to `Assets/Scripts/Free medieval weapon/Prefabs`
 
-**Setup AimController on Character**
-1. Select your character in Hierarchy
-2. Add the AimController component
-3. Assign references:
-   - Camera Transform: Drag the main camera or camera follow target
-   - Character Body: Drag the character's root transform
-   - Bow Transform: Drag the Bow GameObject
-   - Max Aim Distance: 100
-4. Configure Layer Mask to include relevant collision layers
+  * Drag `Arrow` into `Hierarchy`
+  * Adjust **rotation only** so arrow faces forward of archer
+    *(Do not change position or scale)*
 
-**Integrate with Bow Script**
-Update the Bow.cs script to use aim direction:
-```csharp
-// Add at top of Bow class
-private AimController aimController;
+---
 
-void Start()
-{
-    aimController = GetComponentInParent<AimController>();
-}
+### Step 5.2: Arrow Prefab & Physics
 
-// Modify ReleaseArrow method
-void ReleaseArrow()
-{
-    if (drawnArrow == null) return;
-    
-    isDrawing = false;
-    float shotPower = (currentDrawTime / maxDrawTime) * maxDrawPower;
-    
-    drawnArrow.transform.SetParent(null);
-    Rigidbody arrowRb = drawnArrow.GetComponent<Rigidbody>();
-    
-    if (arrowRb != null)
-    {
-        arrowRb.isKinematic = false;
-        
-        // Use aim controller direction instead of transform.forward
-        Vector3 shootDirection = (aimController.GetAimPoint() - arrowSpawnPoint.position).normalized;
-        arrowRb.AddForce(shootDirection * shotPower * arrowSpeed, ForceMode.Impulse);
-    }
-    
-    drawnArrow = null;
-    currentDrawTime = 0f;
-}
-```
+* In `Hierarchy`
 
-This provides precise aiming mechanics that follow the camera's view direction.
+  * Create `Empty GameObject` → name it `Arrow`
+  * Drag rotated `Arrow` (mesh) into this object
 
-### Phase 6: Equipment Management System
+* Reposition `Arrow` (parent) to make it visible
 
-This phase implements the ability to equip and unequip the bow using input controls and animation integration.
+* Adjust `Arrow` (child):
 
-#### Step 6.1: Create Equipment Manager Script
+  * Rotate `X = 90`
 
-**Generate EquipmentManager Script**
-```csharp
-using UnityEngine;
+* Select `Arrow` (parent, from Hierarchy)
 
-public class EquipmentManager : MonoBehaviour
-{
-    [Header("Equipment Settings")]
-    public GameObject bowGameObject;
-    public KeyCode equipToggleKey = KeyCode.E;
-    
-    [Header("Animation")]
-    public Animator characterAnimator;
-    public string equipBoolParameter = "BowEquipped";
-    
-    private bool isBowEquipped = false;
-    
-    void Start()
-    {
-        // Start with bow unequipped
-        SetBowEquipped(false);
-    }
-    
-    void Update()
-    {
-        HandleEquipmentInput();
-    }
-    
-    void HandleEquipmentInput()
-    {
-        if (Input.GetKeyDown(equipToggleKey))
-        {
-            ToggleBowEquipped();
-        }
-    }
-    
-    void ToggleBowEquipped()
-    {
-        isBowEquipped = !isBowEquipped;
-        SetBowEquipped(isBowEquipped);
-    }
-    
-    void SetBowEquipped(bool equipped)
-    {
-        isBowEquipped = equipped;
-        
-        // Show or hide bow GameObject
-        if (bowGameObject != null)
-        {
-            bowGameObject.SetActive(equipped);
-        }
-        
-        // Update animator parameter
-        if (characterAnimator != null)
-        {
-            characterAnimator.SetBool(equipBoolParameter, equipped);
-        }
-        
-        // Enable/disable bow script
-        Bow bowScript = bowGameObject?.GetComponent<Bow>();
-        if (bowScript != null)
-        {
-            bowScript.enabled = equipped;
-        }
-    }
-    
-    public bool IsBowEquipped()
-    {
-        return isBowEquipped;
-    }
-}
-```
+  * Add `Rigidbody`
 
-#### Step 6.2: Integrate Equipment System
+    * Disable `Use Gravity`
+    * Disable `Is Kinematic`
+    * `Interpolate` → `None`
+    * `Collision Detection` → `Continuous Dynamic`
+  * Add `Box Collider`
 
-**Add to Character**
-1. Select character in Hierarchy
-2. Add EquipmentManager component
-3. Configure:
-   - Bow Game Object: Drag the Bow GameObject
-   - Equip Toggle Key: E
-   - Character Animator: Drag the Animator component
-   - Equip Bool Parameter: "BowEquipped"
+    * Use `Edit Collider` to fit arrow shape
 
-**Setup Animator Controller**
-1. Open the CharacterAnimator controller
-2. Create a new Bool parameter called "BowEquipped"
-3. Create animation states or blend trees for:
-   - Combat stance (bow equipped)
-   - Normal stance (bow unequipped)
-4. Create transitions based on BowEquipped parameter
-5. Configure transition conditions and blend times
+* Drag `Arrow` (parent) to `Assets/Prefabs`
 
-This allows seamless weapon switching with visual feedback.
+* Delete `Arrow` from `Hierarchy`
 
-### Phase 7: Audio and Ammunition System
+* In `Assets/Prefabs`, select `Arrow` and add `Arrow.cs` (Script)
 
-This phase adds audio feedback for combat actions and implements an ammunition tracking system.
+* Go to `Wooden Bow` (`Player → LeftHand`)
 
-#### Step 7.1: Implement Audio System
+  * In `Bow` (Script) drag `Arrow` prefab
 
-**Create AudioManager for Bow**
-```csharp
-using UnityEngine;
+![Animator Parameters and Blend Trees Setup](./Images%20of%20Setting/PHASE%205,%20STEP%202.png)
 
-public class BowAudioManager : MonoBehaviour
-{
-    [Header("Audio Clips")]
-    public AudioClip drawSound;
-    public AudioClip releaseSound;
-    public AudioClip impactSound;
-    
-    [Header("Audio Settings")]
-    public float volume = 1f;
-    
-    private AudioSource audioSource;
-    
-    void Start()
-    {
-        audioSource = gameObject.AddComponent<AudioSource>();
-        audioSource.playOnAwake = false;
-        audioSource.volume = volume;
-    }
-    
-    public void PlayDrawSound()
-    {
-        if (drawSound != null)
-        {
-            audioSource.PlayOneShot(drawSound);
-        }
-    }
-    
-    public void PlayReleaseSound()
-    {
-        if (releaseSound != null)
-        {
-            audioSource.PlayOneShot(releaseSound);
-        }
-    }
-    
-    public void PlayImpactSound(Vector3 position)
-    {
-        if (impactSound != null)
-        {
-            AudioSource.PlayClipAtPoint(impactSound, position, volume);
-        }
-    }
-}
-```
+* **Play & Adjust**
 
-**Integrate Audio into Bow Script**
-Add to Bow.cs:
-```csharp
-private BowAudioManager audioManager;
+  * `Assets/Prefabs`
 
-void Start()
-{
-    audioManager = GetComponent<BowAudioManager>();
-}
+    * `Arrow` → `Box Collider`
+    * `CrossHair` → `Scale`
+  * `Animator → UpperBody`
 
-// In StartDrawing():
-audioManager?.PlayDrawSound();
+    * `Draw Arrow` → `EnableArrow`, `Pull`
+    * `Fire Arrow` → `Release`, `DisableArrow`
+  * `Wooden Bow` (`Player → RightHand`)
 
-// In ReleaseArrow():
-audioManager?.PlayReleaseSound();
-```
+    * Adjust `Arrow Force`
 
-#### Step 7.2: Implement Ammunition System
+---
 
-**Create AmmoManager Script**
-```csharp
-using UnityEngine;
-using UnityEngine.UI;
+### Step 5.3: Head Rotation & Gravity
 
-public class AmmoManager : MonoBehaviour
-{
-    [Header("Ammo Settings")]
-    public int maxAmmo = 30;
-    public int currentAmmo = 30;
-    
-    [Header("UI")]
-    public Text ammoText;
-    
-    void Start()
-    {
-        UpdateAmmoUI();
-    }
-    
-    public bool HasAmmo()
-    {
-        return currentAmmo > 0;
-    }
-    
-    public bool ConsumeAmmo()
-    {
-        if (currentAmmo > 0)
-        {
-            currentAmmo--;
-            UpdateAmmoUI();
-            return true;
-        }
-        return false;
-    }
-    
-    public void AddAmmo(int amount)
-    {
-        currentAmmo = Mathf.Min(currentAmmo + amount, maxAmmo);
-        UpdateAmmoUI();
-    }
-    
-    void UpdateAmmoUI()
-    {
-        if (ammoText != null)
-        {
-            ammoText.text = $"Arrows: {currentAmmo}/{maxAmmo}";
-        }
-    }
-}
-```
+* Replace script:
 
-**Integrate Ammo System into Bow**
-Modify Bow.cs StartDrawing():
-```csharp
-void StartDrawing()
-{
-    AmmoManager ammoManager = GetComponent<AmmoManager>();
-    
-    if (ammoManager != null && !ammoManager.HasAmmo())
-    {
-        // No ammo available, play empty sound or show notification
-        return;
-    }
-    
-    isDrawing = true;
-    currentDrawTime = 0f;
-    
-    // Consume ammo
-    ammoManager?.ConsumeAmmo();
-    
-    // Rest of the drawing logic...
-}
-```
+  * `InputSystem.cs` →
+    `Assets/Scripts/Character/InputSystem/8 Head Rotation and Gravity Simulation`
 
-**Create Ammo UI**
-1. In Hierarchy: Right-click → UI → Canvas
-2. Right-click Canvas → UI → Text (TextMeshPro if available)
-3. Position text in corner of screen
-4. Configure text appearance
-5. Drag text element to AmmoManager component's Ammo Text field
+* Go to `Animator`
 
-This completes the full implementation of audio and resource management.
+  * Click ⚙️ on `UpperBody`
+  * Enable `IK Pass`
+
+* Play and verify head rotation
+
+  * If head rotation off:
+
+    * `Player → Input System`
+    * Adjust `Look At Point`
+
+* **Gravity setup** (move character to ground)
+
+  * `Player → Character Controller`
+  * Adjust `Center (Y)`
+
+---
+
+### Step 5.4: Bow Equip & Unequip
+
+* Replace script:
+
+  * `InputSystem.cs` →
+    `Assets/Scripts/Character/InputSystem/9 Equip and Unequip Bow`
+
+* Go to `LeftHand`
+
+  * Create `Empty GameObject` → `BowEquipPos`
+  * Enable `Gizmo`
+  * Copy `Wooden Bow` Transform → Paste into `BowEquipPos`
+
+* Move `Wooden Bow` to `Spine`
+
+  * Reset Transform
+  * Position it like bow carried on back
+
+* Go to `Spine`
+
+  * Create `Empty GameObject` → `BowUnEquipPos`
+  * Enable `Gizmo`
+  * Copy `Wooden Bow` Transform → Paste into `BowUnEquipPos`
+
+* Select `Wooden Bow`
+
+  * In `Bow` (Script):
+
+**Bow Equip & UnEquip Settings**
+
+* `Equip Pos` → `BowEquipPos` (Player → LeftHand)
+* `Un Equip Pos` → `BowUnEquipPos` (Player → Spine)
+* `Un Equip Parent` → `Spine` (Player → Hips)
+* `Equip Parent` → `LeftHand` (Player → LeftForeArm)
+
+![Animator Parameters and Blend Trees Setup](./Images%20of%20Setting/PHASE%205,%20STEP%204.png)
+
+---
+
+### Step 5.5: Footstep Sounds
+
+* Drag `Sounds` folder into `Assets` (or use your own)
+
+* In `Assets/Scripts`
+
+  * Create folder `Sounds`
+  * Copy `FootStepSound.cs` script
+  * Add it to `Player`
+
+* Under `Player`
+
+  * Create `Empty GameObject` → `FootAudio`
+  * Add `Audio Source`
+
+    * Disable `Play On Awake`
+    * `Spatial Blend` → `1`
+    * `Volume` → `~0.3`
+
+* Select `Player`, in `FootStepSound` (Script)
+
+  * `Player Foot Audio` → `FootAudio`
+  * `Foot Clip` → any sound from `Assets/Sounds/Footsteps`
+
+* Go to `Animator`
+
+  * `Base Layer` → `Walk` → `Walk Forward`
+  * Add Animation Event → `PlayFootSound`
+  * Repeat for:
+
+    * Walk
+    * Run
+    * Aim Move
+
+* Play and adjust volume
+
+---
+
+### Step 5.6: Arrow & Bow Sounds
+
+* Replace script:
+
+  * `Arrow.cs` → `Assets/Scripts/Weapon/Arrow/2 Arrow Sound`
+
+* In `Assets/Prefabs`, select `Arrow` and add `Audio Source`
+
+  * Disable `Play On Awake`
+  * `Spatial Blend` → `1`
+  * `Volume` → `~0.5`
+  * `Audio Clip` → from `Assets/Sounds/Impact Sfx`
+
+* Play and confirm arrow hit sound
+
+* Replace scripts:
+
+  * `Bow.cs` → `Assets/Scripts/Weapon/Bow/4 Bow Sound`
+  * `InputSystem.cs` → `Assets/Scripts/Character/InputSystem/10 Bow and Arrow Sound`
+
+* Go to `Wooden Bow` (`Player → Spine`)
+
+  * Add `Audio Source`
+
+    * Disable `Play On Awake`
+    * `Spatial Blend` → `1`
+    * `Volume` → `~0.5`
+
+* In `Bow` (Script) of `Wooden Bow`, drag these from `Assets/Sounds/Bow & Arrow`
+
+  * `Pull String Audio` → `Bow String Pull`
+  * `Release String Arrow` → `Release String`
+  * `Draw Arrow Audio` → `Pick Arrow`
+
+* Go to `Animator → UpperBody → Arrow Logic → Pull String`
+
+  * Add Event → `PlayPullSound`
+
+* Play and confirm sounds
+
+---
+
+### Step 5.7: Ammo Check
+
+* Replace scripts:
+
+  * `Bow.cs` → `Assets/Scripts/Weapon/Bow/5 Ammo Check`
+  * `InputSystem.cs` → `Assets/Scripts/Character/InputSystem/11 Ammo Check`
+
+* Play and confirm:
+
+  * Ammo decrement
+  * No fire when ammo is zero
+  * All animations and sounds synced
+
+✅ **Bow & Arrow System Fully Functional**
+[**Watch Demo**](Arrowline%201.mp4)
 
 ## Animation State Machine
 
-**Recommended Animator States**
-1. **Idle State** - Default resting pose
-2. **Locomotion Blend Tree** - Walk/Run based on speed
-3. **Combat Idle** - Armed stance with bow
-4. **Draw Bow** - Pulling arrow back on bowstring
-5. **Aim Bow** - Holding at full draw
-6. **Release Bow** - Firing animation
-7. **Equip/Unequip** - Weapon switching animations
+**Base Layer States** (Lower body locomotion)
+| State | Type | Parameters |
+|-------|------|-----------|
+| **Idle** | Default state | Blend (0,0) in Walk tree |
+| **Walk** | 2D Blend Tree | forward/strafe (-1 to 1) |
+| **Run** | 2D Blend Tree | forward/strafe (-1 to 1), sprint=true |
+| **Aim Move** | 2D Blend Tree | forward/strafe (-1 to 1), aim=true |
 
-**State Transitions**
-- Idle ↔ Locomotion: Based on movement speed
-- Idle → Combat Idle: BowEquipped = true
-- Combat Idle → Draw Bow: isDrawing = true
-- Draw Bow → Aim Bow: drawTime > threshold
-- Aim Bow → Release Bow: Fire1 released
-- Release Bow → Combat Idle: Animation complete
+**Base Layer Transitions**
+- Walk ↔ Run: `sprint == true/false` (no exit time)
+- Walk ↔ Aim Move: `aim == true/false` (no exit time)
+- Run ↔ Aim Move: `aim == true/false` (no exit time)
+
+**Upper Body Layer** (Independent bow animation)
+| State | Loop | Purpose |
+|-------|------|---------|
+| **Empty** | - | Default, no animation |
+| **Draw Arrow** | No | Pulling arrow onto string |
+| **Pull String** | No | Holding bowstring at full draw |
+| **Fire Arrow** | No | Release and recoil animation |
+
+**Arrow Logic Sub-State Machine**
+- Empty → Draw Arrow: `aim == true`
+- Draw Arrow → Pull String: `pullString == true`
+- Pull String → Fire Arrow: `fire == true` (trigger)
+- Fire Arrow → Draw Arrow: (exit time, loops if aim continues)
+- Any State → Empty: `aim == false`
+
+**Animator Parameters** (Global)
+- `float forward` - Movement forward/back (-1 to 1)
+- `float strafe` - Movement left/right (-1 to 1)
+- `bool sprint` - Activate Run state (Shift key)
+- `bool aim` - Enter aiming mode (Right-click)
+- `bool pullString` - Activate full draw (Left hold)
+- `trigger fire` - Release arrow (Left release)
 
 ## Physics Configuration
 
@@ -1371,7 +1127,7 @@ This completes the full implementation of audio and resource management.
 **Collider Configuration**
 - Type: Capsule Collider (matches arrow shape)
 - Radius: Match arrow shaft thickness
-- Height: Full arrow length including tip
+- Height: Full arrow length excluding tip
 - Is Trigger: Disabled (physical collision)
 
 **Layer Setup**
@@ -1385,83 +1141,184 @@ Configure Layer Collision Matrix in Project Settings → Physics.
 
 ## Best Practices
 
+**Animator Configuration**
+- Keep parameter names consistent (`forward`, `strafe`, `sprint`, `aim`, `pullString`, `fire`)
+- Use separate layers for upper/lower body (UpperBody mask disables lower body)
+- Create sub-state machines for complex logic (Arrow Logic state machine)
+- Disable **Loop Time** for non-repeating animations (Draw Arrow, Fire Arrow)
+- Enable **Loop Time** for repeating animations (Idle, Walk, Run, Aim Move)
+- Use **Bake Into Pose** on Root Transform for animations that move character
+
 **Script Organization**
-- Keep scripts modular and single-purpose
-- Use public fields for designer-adjustable values
-- Add [Header] attributes for Inspector organization
-- Comment complex logic sections
+- Modular structure: Movement.cs (locomotion), InputSystem.cs (controls), Bow.cs (mechanics), Arrow.cs (physics)
+- Cache component references in Start() (GetComponent calls expensive)
+- Use public fields for inspector adjustments (Arrow Count, Arrow Force, String positions)
+- Comment animation event triggers (EnableArrow, Pull, Release, DisableArrow)
 
-**Performance Optimization**
-- Use object pooling for arrows instead of Instantiate/Destroy
-- Limit arrow lifetime to prevent accumulation
-- Cache component references in Start() instead of repeated GetComponent()
-- Use FixedUpdate for physics calculations, Update for input
+**Bow Mechanics**
+- Test bow without animations first, then integrate
+- Verify string initial position matches `WB.String` (no stretching on start)
+- Adjust Arrow Force value for desired firing power
+- Enable Gizmos on `StringHandPullPos` to visualize pull distance
+- Match `WB.main` transforms for string parent hierarchy
 
-**Animation Tips**
-- Use animation events to trigger sounds and effects
-- Blend between states with appropriate transition times
-- Create sub-state machines for complex behaviors
-- Use layers for upper/lower body separation
+**Audio Implementation**
+- Use Animation Events to trigger sounds at correct frame (prevent sound overlap)
+- Add `PlayFootSound` events to Walk/Run/Aim Move animations (one per cycle)
+- Set Spatial Blend = 1 on arrow/bow audio (3D positional sound)
+- Adjust Volume ~0.3 for footsteps, ~0.5 for bow/arrow (prevent clipping)
 
-**Debugging Strategies**
-- Use Debug.DrawRay() to visualize aim direction
-- Add Debug.Log() statements to trace script execution
-- Use Gizmos for visualizing spawn points and ranges
-- Test with Time.timeScale adjustment for slow-motion debugging
+**Camera Setup**
+- Adjust Camera zoom values if too aggressive on aim (Zoom Field of View, Zoom Speed)
+- Position Main Camera slightly left to avoid clipping head
+- Apply same camera position to CamPosition for consistency
+- Use UI Camera layer separation (main renders everything, UI renders only UI layer)
+
+**Debugging Tips**
+- Enable `Test Aim` in InputSystem to verify spine/head rotation
+- Use Gizmos to visualize string positions and arrow spawns
+- Check animation parameter spelling in transitions (case-sensitive)
+- Verify audio clips are assigned (not empty) before playing
+- Test ammo system: fire arrow, check count decrements, verify fire disabled at zero
 
 ## Troubleshooting
 
-**Arrow Doesn't Fire**
-- Verify ArrowPrefab is assigned in Bow component
-- Check ArrowSpawnPoint is correctly positioned
-- Ensure Fire1 input is configured in Project Settings → Input Manager
-- Confirm arrow has Rigidbody component
-
-**Bow Not Attaching to Hand**
-- Verify bow is child of correct hand bone
-- Check character has Humanoid rig
-- Adjust bow local transform position/rotation
-- Test with simple cube before using complex model
-
-**Aiming Direction Incorrect**
-- Confirm camera reference is assigned in AimController
-- Check LayerMask includes ground and target layers
-- Verify character rotation is not locked
-- Test raycast visualization with Debug.DrawRay
+**Movement Not Working**
+- Verify InputSystem.cs is attached to Player
+- Check Input Manager has `Sprint` axis configured (Shift key)
+- Ensure Movement.cs has Character Controller attached to Player
+- Test with WASD keys in Play mode
+- Disable `sprint` parameter in Animator if stuck in Run state
 
 **Animations Not Playing**
-- Ensure Animator component is on character root
-- Verify animation controller is assigned
-- Check animation parameters are spelled correctly
-- Confirm transitions have proper conditions
+- Verify Animator component assigned to Player with PlayerAnim controller
+- Check Animator parameters match exactly: `forward`, `strafe`, `sprint`, `aim`, `pullString`, `fire`
+- Ensure transitions have correct conditions and **Has Exit Time** disabled
+- Verify animation clips assigned in blend trees (not empty)
+- Check UpperBody layer has correct Avatar Mask (Lower Body disabled)
 
-**No Sound Playing**
-- Import audio files to Assets/Audio/
-- Assign audio clips to BowAudioManager fields
-- Check AudioListener is present in scene (usually on camera)
-- Verify audio volume is not muted
+**Bow Not Firing**
+- Verify Arrow prefab assigned in Bow (Script) component
+- Check `fire` parameter is trigger type in Animator
+- Ensure Fire Arrow animation event calls `Release` (exact spelling)
+- Verify arrow has Rigidbody with **Collision Detection: Continuous Dynamic**
+- Test with simpler arrow shape first (cube) before complex mesh
+
+**Arrow Firing But No Damage/Sound**
+- Check Arrow.cs script attached to Arrow prefab
+- Verify Audio Source added to Arrow prefab with impact sound assigned
+- Adjust Audio Source Volume if sound too quiet (~0.5)
+- Ensure impact animation event `DisableArrow` fires (removes arrow from scene)
+- Check arrow lifetime isn't immediately destroying on spawn
+
+**Camera Issues**
+- **Clipping into character**: Enable camera collision (CamPosition setup in Step 2.7)
+- **Zoom too aggressive**: Reduce `Zoom Field of View` and `Zoom Speed` in CameraHolder
+- **Camera rotates wrong**: Verify Main Camera position is under CameraHolder/Center
+- **UI overlapping game**: Set Main Camera `Culling Mask` to exclude UI layer
+- **No crosshair visible**: Check Canvas Render Mode is World Space, position near camera
+
+**Aiming Direction Wrong**
+- Verify Spine assigned in InputSystem (Player/erika_archer/Hips/Spine)
+- Enable `Test Aim` checkbox and adjust `Spine Offset` during Play mode
+- Check arrow spawn position (Player/RightHand/Arrow position)
+- Verify IK Pass enabled on UpperBody layer in Animator
+- Test with Debug.DrawRay visualization if available
 
 **Ammo Not Decreasing**
-- Confirm AmmoManager component is attached
-- Check ConsumeAmmo() is called in StartDrawing()
-- Verify currentAmmo has starting value
-- Ensure UI text reference is assigned
+- Verify Arrow Count set to 10 (or desired value) in Bow (Script)
+- Check Bow.cs version is ammo check version (#5)
+- Ensure fire event triggers DisableArrow (removes arrow, decrements count)
+- Test ammo display if UI text reference assigned
+
+**Audio Not Playing**
+- Verify Audio Source components added to Arrow prefab and Wooden Bow
+- Check Spatial Blend = 1 (3D positional sound)
+- Ensure Volume not at 0 (~0.3 for footsteps, ~0.5 for bow/arrow)
+- Verify animation events match exact function names: `PlayFootSound`, `PlayPullString`
+- Check AudioListener exists in scene (usually on Main Camera)
+
+**Character Falls Through Ground**
+- Verify Plane has Collider (no Rigidbody needed, static)
+- Check Player Character Controller height/radius fits on ground
+- Ensure ground plane is positioned at Y=0 or adjust character spawn height
+- Test with larger ground plane if character sliding off edges
+
+**Head Doesn't Rotate During Aim**
+- Verify IK Pass enabled on UpperBody layer (⚙️ icon on layer)
+- Check Look At Point assigned in InputSystem
+- Test by enabling Test Aim checkbox, adjust Look At Point X/Y/Z
+- If rotated 180°, adjust spine offset or Look At Point position
 
 ## Important Notes
 
-- ❗ Always test in Play Mode after making script changes
-- ❗ Save scene frequently to prevent data loss
-- ❗ Use version control (Git) to track changes
-- ❗ Create backup copies before major refactoring
-- ✅ Character must have Humanoid rig for proper bone attachment
-- ✅ Arrow Prefab must have Rigidbody for physics simulation
-- ✅ Camera raycast requires proper Layer configuration
-- ✅ Animation states require matching parameter names
-- ✅ Audio files should be in WAV or MP3 format
-- ✅ All scripts should be in appropriate folder structure
-- ✅ Test bow mechanics without animations first, then integrate
-- ✅ Prototype with simple shapes before adding complex models
-- ✅ Balance arrow speed and draw power for satisfying gameplay
+**Required Setup**
+- ⚠️ Character MUST use **Humanoid rig** (not Generic) for bone attachment
+- ⚠️ All animation FBX files must use **same Avatar** (Copy From Other Avatar)
+- ⚠️ Do NOT rename Animator parameters after setup (will break all transitions)
+- ⚠️ Arrow prefab MUST have **Rigidbody** for physics simulation and collision detection
+
+**Critical Folder Structure**
+- `Assets/Assets/Longbow/` - Character model and 39 animations
+- `Assets/Assets/Free medieval weapons/` - Bow model and weapon prefabs
+- `Assets/Scripts/Character/` - InputSystem.cs, Movement.cs
+- `Assets/Scripts/Camera/` - CameraController.cs
+- `Assets/Scripts/Weapon/` - Bow.cs, Arrow.cs
+- `Assets/Prefabs/` - Arrow, CrossHair prefabs
+- `Assets/UI/` - arrow-crosshair image
+- `Assets/Sounds/` - Footsteps, Bow & Arrow, Impact Sfx folders
+
+**Animator Parameter Rules**
+- `forward` and `strafe` are **float** parameters (-1 to 1)
+- `sprint` and `aim` are **bool** parameters
+- `pullString` is **bool** parameter
+- `fire` is a **trigger** (not bool, not float)
+- Changing parameter names will break all transitions - do not rename
+
+**Animation Event Triggers**
+- `EnableArrow` - called on Draw Arrow at frame arrow appears
+- `Pull` - called on Draw Arrow when string starts pulling
+- `Release` - called on Fire Arrow when arrow launches
+- `DisableArrow` - called on Fire Arrow to remove arrow and decrement ammo
+- Use EXACT spelling (case-sensitive)
+
+**Physics and Collision**
+- Arrow: **Use Gravity enabled**, **Collision Detection Continuous Dynamic**
+- Ground/Walls: Colliders but NO Rigidbody (static)
+- Player: **Character Controller** for movement (NOT Rigidbody)
+- Camera: Raycast-based collision avoidance (not physics-based)
+
+**Audio Requirements**
+- WAV or MP3 format (Unity auto-imports)
+- Footstep: ~0.3 volume, Spatial Blend = 1, 3D positional
+- Bow draw/release: ~0.5 volume, Spatial Blend = 1, 3D positional
+- Arrow impact: ~0.5 volume, Spatial Blend = 1, trigger on collision
+- Ensure Audio Listener present (usually on Main Camera)
+
+**Testing Checklist**
+- ✅ WASD movement works, Shift activates sprint (Run animation)
+- ✅ Right-click enters aim mode (camera zooms, crosshair appears)
+- ✅ Mouse hold activates draw (Pull String animation)
+- ✅ Mouse release fires arrow (Fire Arrow animation, arrow spawns)
+- ✅ Ammo decrements on fire, fire disabled at zero ammo
+- ✅ Footstep sounds play on movement
+- ✅ Bow draw/release sounds play on draw/fire
+- ✅ Arrow impact sound plays on collision
+- ✅ Camera collision prevents clipping into character
+- ✅ Head rotates toward aim target (IK enabled)
+- ✅ Crosshair moves with camera during aim
+
+**Common Mistakes to Avoid**
+- ❌ Using Generic rig instead of Humanoid (bones won't attach)
+- ❌ Different avatars for animations (inconsistent skeleton)
+- ❌ Renaming animator parameters (breaks all transitions)
+- ❌ Missing animation events (bow won't draw/fire properly)
+- ❌ Arrow without Rigidbody (won't fire or collide)
+- ❌ Forgot to add Audio Source to arrow/bow (no sounds)
+- ❌ Crosshair in screen space instead of world space (wrong position)
+- ❌ Camera collision layer not set to Default (clipping into character)
+- ❌ Arrow Force = 0 (arrow doesn't launch)
+- ❌ Arrow Count = 0 (can't fire)
 
 
 ## Notes
